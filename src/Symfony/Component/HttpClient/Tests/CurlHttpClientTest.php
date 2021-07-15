@@ -59,6 +59,15 @@ class CurlHttpClientTest extends HttpClientTestCase
         parent::testTimeoutIsNotAFatalError();
     }
 
+    public function testTimeoutDuringBodyIsNotAFatalError()
+    {
+        if ('\\' === \DIRECTORY_SEPARATOR) {
+            $this->markTestSkipped('Too transient on Windows');
+        }
+
+        parent::testTimeoutDuringBodyIsNotAFatalError();
+    }
+
     public function testOverridingRefererUsingCurlOptions()
     {
         $httpClient = $this->getHttpClient(__FUNCTION__);

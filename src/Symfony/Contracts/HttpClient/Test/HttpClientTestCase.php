@@ -11,12 +11,17 @@
 
 namespace Symfony\Contracts\HttpClient\Test;
 
+use Nyholm\Psr7\Factory\Psr17Factory;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\HttpClient\HttpClient;
+use Symfony\Component\HttpClient\Psr18Client;
 use Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\RedirectionExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\TimeoutExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
+
+use function usleep;
 
 /**
  * A reference test suite for HttpClientInterface implementations.
@@ -765,6 +770,21 @@ abstract class HttpClientTestCase extends TestCase
         if (10 === $i) {
             throw $e;
         }
+    }
+
+    public function testTimeoutDuringBodyIsNotAFatalError()
+    {
+        usleep(300000); // wait for the previous test to release the server
+
+        $factory = new Psr17Factory();
+        $client = new Psr18Client(HttpClient::create(['timeout' => 0.25,]), $factory);
+        $response = $client->sendRequest(
+            $factory->createRequest('GET', 'http://localhost:8057/timeout-body')
+        );
+
+        self::assertSame(200, $response->getStatusCode());
+
+        (string) $response->getBody();
     }
 
     public function testTimeoutOnStream()
